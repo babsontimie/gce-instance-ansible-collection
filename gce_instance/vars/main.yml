@@ -1,0 +1,8 @@
+project_id: "tee-ghactions"
+zone: "us-central1-a"
+instance_name: "tee-ansible-instance"
+machine_type: "e2-micro"
+network_name: default
+disk_image: "projects/debian-cloud/global/images/family/debian-12"
+service_account_file: "/tmp/tee-ghactions.json"
+address: "34.102.100.50"

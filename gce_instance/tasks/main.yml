@@ -1,0 +1,96 @@
+---
+
+- name: Create boot disk
+  google.cloud.gcp_compute_disk:
+    name: "{{ instance_name }}-boot"
+    size_gb: 20
+    source_image: "{{ disk_image }}"
+    zone: "{{ zone }}"
+    project: "{{ project_id }}"
+    auth_kind: serviceaccount
+    service_account_file: "{{ service_account_file }}"
+    state: present
+  register: boot_disk
+
+#- name: Create instance
+#  google.cloud.gcp_compute_instance:
+#    name: "{{ instance_name }}"
+#    machine_type: "{{ machine_type }}"
+#    zone: "{{ zone }}"
+#    project: "{{ project_id }}"
+#    auth_kind: serviceaccount
+#    service_account_file: "{{ service_account_file }}"
+#    disks:
+#      - auto_delete: true
+#        boot: true
+#        source: "{{ boot_disk }}"
+#      - auto_delete: true
+#        interface: NVME
+#        type: SCRATCH
+#        initialize_params:
+#          disk_type: local-ssd
+#    metadata:
+#      startup-script-url: "gs://graphite-playground/bootstrap.sh"
+#      cost-center: "12345"
+#    labels:
+#      environment: production
+#    network_interfaces:
+#      - network: "{{ network_name }}"
+#        access_configs:
+#          - name: External NAT
+#            type: ONE_TO_ONE_NAT
+#    tags:
+#      items:
+##        - web
+#        - production
+#    state: present
+
+- name: Create default VPC network
+  google.cloud.gcp_compute_network:
+    name: default
+    auto_create_subnetworks: true
+    project: "{{ project_id }}"
+    auth_kind: serviceaccount
+    service_account_file: "{{ service_account_file }}"
+    state: present
+
+
+- name: Create instance
+  google.cloud.gcp_compute_instance:
+    name: "{{ instance_name }}"
+    machine_type: "{{ machine_type }}"
+#    disks:
+#      - auto_delete: true
+#        boot: true
+#        source: "{{ boot_disk }}"
+#      - auto_delete: true
+#        interface: NVME
+#        type: SCRATCH
+#        initialize_params:
+#          disk_type: local-ssd
+
+    disks:
+      - auto_delete: true
+        boot: true
+        initialize_params:
+          source_image: "projects/debian-cloud/global/images/family/debian-12"
+    # Remove the second local SSD disk
+
+    metadata:
+      startup-script-url: gs://graphite-playground/bootstrap.sh
+      cost-center: '12345'
+    labels:
+      environment: production
+
+    network_interfaces:
+      - network:
+          selfLink: "https://www.googleapis.com/compute/v1/projects/{{ project_id }}/global/networks/default"
+        access_configs:
+          - name: External NAT
+            type: ONE_TO_ONE_NAT
+
+    zone: us-central1-a
+    project: "{{ project_id }}"
+    auth_kind: serviceaccount
+    service_account_file: "{{ service_account_file }}"
+    state: present
